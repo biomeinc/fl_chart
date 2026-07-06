@@ -425,6 +425,7 @@ class BarChartPainter extends AxisChartPainter<BarChartData> {
   ) {
     final data = holder.data;
     final viewSize = canvasWrapper.size;
+    final chartRotation = -data.rotationQuarterTurns * (pi / 2);
 
     for (var i = 0; i < data.barGroups.length; i++) {
       final barGroup = data.barGroups[i];
@@ -437,8 +438,21 @@ class BarChartPainter extends AxisChartPainter<BarChartData> {
 
         final x = groupBarsPosition[i].barsX[j];
         final tipY = getPixelY(barRod.toY, viewSize, holder);
-        final center = Offset(x, tipY - badge.margin - badge.radius);
+        final isUpward = barRod.toY >= barRod.fromY;
+        final center = Offset(
+          x,
+          isUpward
+              ? tipY - badge.margin - badge.radius
+              : tipY + badge.margin + badge.radius,
+        );
+
+        canvasWrapper
+          ..save()
+          ..translate(center.dx, center.dy)
+          ..rotate(chartRotation)
+          ..translate(-center.dx, -center.dy);
         _drawSealBadge(canvasWrapper, center, badge, holder);
+        canvasWrapper.restore();
       }
     }
   }
