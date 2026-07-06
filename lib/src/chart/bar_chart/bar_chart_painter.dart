@@ -467,6 +467,9 @@ class BarChartPainter extends AxisChartPainter<BarChartData> {
     if (scale <= 0.01) {
       return;
     }
+    if (badge.points <= 0) {
+      return;
+    }
     final opacity = scale > 1 ? 1.0 : scale;
 
     final radius = badge.radius * scale;
