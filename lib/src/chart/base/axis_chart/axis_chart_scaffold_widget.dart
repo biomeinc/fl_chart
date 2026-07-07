@@ -205,7 +205,7 @@ class _AxisChartScaffoldWidgetState extends State<AxisChartScaffoldWidget> {
         ? widget.data.borderData.border
         : null;
 
-    final borderRadius = widget.data.borderData.isVisible()
+    final borderRadius = borderData != null && borderData.isUniform
         ? widget.data.borderData.borderRadius
         : null;
 
