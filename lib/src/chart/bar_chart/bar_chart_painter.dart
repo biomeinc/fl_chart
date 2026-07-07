@@ -439,7 +439,7 @@ class BarChartPainter extends AxisChartPainter<BarChartData> {
 
         final x = groupBarsPosition[i].barsX[j];
         final tipY = getPixelY(barRod.toY, viewSize, holder);
-        final isUpward = barRod.toY >= barRod.fromY;
+        final isUpward = barRod.isUpward();
         final center = Offset(
           x,
           isUpward
