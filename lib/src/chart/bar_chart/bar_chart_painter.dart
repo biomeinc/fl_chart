@@ -94,7 +94,7 @@ class BarChartPainter extends AxisChartPainter<BarChartData> {
 
     drawBars(canvasWrapper, _groupBarsPosition!, holder);
     drawBarLabels(context, canvasWrapper, _groupBarsPosition!, holder);
-    drawRodBadges(canvasWrapper, _groupBarsPosition!, holder);
+    drawRodBadges(context, canvasWrapper, _groupBarsPosition!, holder);
 
     drawErrorIndicatorData(canvasWrapper, _groupBarsPosition!, holder);
 
@@ -419,6 +419,7 @@ class BarChartPainter extends AxisChartPainter<BarChartData> {
 
   @visibleForTesting
   void drawRodBadges(
+    BuildContext context,
     CanvasWrapper canvasWrapper,
     List<GroupBarsPosition> groupBarsPosition,
     PaintHolder<BarChartData> holder,
@@ -451,13 +452,14 @@ class BarChartPainter extends AxisChartPainter<BarChartData> {
           ..translate(center.dx, center.dy)
           ..rotate(chartRotation)
           ..translate(-center.dx, -center.dy);
-        _drawSealBadge(canvasWrapper, center, badge, holder);
+        _drawSealBadge(context, canvasWrapper, center, badge, holder);
         canvasWrapper.restore();
       }
     }
   }
 
   void _drawSealBadge(
+    BuildContext context,
     CanvasWrapper canvasWrapper,
     Offset center,
     BarChartRodBadge badge,
@@ -496,7 +498,7 @@ class BarChartPainter extends AxisChartPainter<BarChartData> {
         ..style = PaintingStyle.fill,
     );
 
-    final baseStyle = badge.textStyle;
+    final baseStyle = Utils().getThemeAwareTextStyle(context, badge.textStyle);
     final baseColor = baseStyle.color ?? const Color(0xFFFFFFFF);
     final textStyle = baseStyle.copyWith(
       fontSize: (baseStyle.fontSize ?? 11) * scale,
