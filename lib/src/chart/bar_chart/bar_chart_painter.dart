@@ -94,6 +94,7 @@ class BarChartPainter extends AxisChartPainter<BarChartData> {
 
     drawBars(canvasWrapper, _groupBarsPosition!, holder);
     drawBarLabels(context, canvasWrapper, _groupBarsPosition!, holder);
+    drawRodBadges(context, canvasWrapper, _groupBarsPosition!, holder);
 
     drawErrorIndicatorData(canvasWrapper, _groupBarsPosition!, holder);
 
@@ -414,6 +415,108 @@ class BarChartPainter extends AxisChartPainter<BarChartData> {
         }
       }
     }
+  }
+
+  @visibleForTesting
+  void drawRodBadges(
+    BuildContext context,
+    CanvasWrapper canvasWrapper,
+    List<GroupBarsPosition> groupBarsPosition,
+    PaintHolder<BarChartData> holder,
+  ) {
+    final data = holder.data;
+    final viewSize = canvasWrapper.size;
+    final chartRotation = -data.rotationQuarterTurns * (pi / 2);
+
+    for (var i = 0; i < data.barGroups.length; i++) {
+      final barGroup = data.barGroups[i];
+      for (var j = 0; j < barGroup.barRods.length; j++) {
+        final barRod = barGroup.barRods[j];
+        final badge = barRod.badge;
+        if (badge == null || barRod.toY == barRod.fromY) {
+          continue;
+        }
+
+        final x = groupBarsPosition[i].barsX[j];
+        final tipY = getPixelY(barRod.toY, viewSize, holder);
+        final isUpward = barRod.isUpward();
+        final center = Offset(
+          x,
+          isUpward
+              ? tipY - badge.margin - badge.radius
+              : tipY + badge.margin + badge.radius,
+        );
+
+        canvasWrapper
+          ..save()
+          ..translate(center.dx, center.dy)
+          ..rotate(chartRotation)
+          ..translate(-center.dx, -center.dy);
+        _drawSealBadge(context, canvasWrapper, center, badge, holder);
+        canvasWrapper.restore();
+      }
+    }
+  }
+
+  void _drawSealBadge(
+    BuildContext context,
+    CanvasWrapper canvasWrapper,
+    Offset center,
+    BarChartRodBadge badge,
+    PaintHolder<BarChartData> holder,
+  ) {
+    final scale = badge.scale <= 0 ? 0.0 : badge.scale;
+    if (scale <= 0.01) {
+      return;
+    }
+    if (badge.points <= 0) {
+      return;
+    }
+    final opacity = scale > 1 ? 1.0 : scale;
+
+    final radius = badge.radius * scale;
+    final innerRadius = radius * badge.innerRadiusRatio;
+    final angleStep = pi / badge.points;
+    final path = Path();
+    for (var k = 0; k < badge.points * 2; k++) {
+      final r = k.isEven ? radius : innerRadius;
+      final angle = k * angleStep - pi / 2;
+      final px = center.dx + r * cos(angle);
+      final py = center.dy + r * sin(angle);
+      if (k == 0) {
+        path.moveTo(px, py);
+      } else {
+        path.lineTo(px, py);
+      }
+    }
+    path.close();
+
+    canvasWrapper.drawPath(
+      path,
+      Paint()
+        ..color = badge.color.withValues(alpha: badge.color.a * opacity)
+        ..style = PaintingStyle.fill,
+    );
+
+    final baseStyle = Utils().getThemeAwareTextStyle(context, badge.textStyle);
+    final baseColor = baseStyle.color ?? const Color(0xFFFFFFFF);
+    final textStyle = baseStyle.copyWith(
+      fontSize: (baseStyle.fontSize ?? 11) * scale,
+      color: baseColor.withValues(alpha: baseColor.a * opacity),
+    );
+    final textPainter = TextPainter(
+      text: TextSpan(text: badge.text, style: textStyle),
+      textAlign: TextAlign.center,
+      textDirection: TextDirection.ltr,
+      textScaler: holder.textScaler,
+    )..layout();
+    textPainter.paint(
+      canvasWrapper.canvas,
+      Offset(
+        center.dx - textPainter.width / 2,
+        center.dy - textPainter.height / 2,
+      ),
+    );
   }
 
   @visibleForTesting
